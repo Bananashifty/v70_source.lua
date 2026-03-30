@@ -14,6 +14,7 @@ MainTab:CreateSection("Main Cheats")
 MainTab:CreateButton({
    Name = "Kill All (TP-Kill)",
    Callback = function()
+       -- Ton code TP-Kill ici
        print("Kill All Activated")
    end,
 })
@@ -26,6 +27,7 @@ MainTab:CreateSlider({
    CurrentValue = 100,
    Flag = "Slider1",
    Callback = function(Value)
+       -- Ton code FOV ici
    end,
 })
 
@@ -36,6 +38,7 @@ VisualTab:CreateToggle({
    CurrentValue = false,
    Flag = "Toggle1",
    Callback = function(Value)
+       -- Ton code ESP ici
    end,
 })
 
@@ -44,7 +47,7 @@ local MiscTab = Window:CreateTab("Misc", 4483362458)
 MiscTab:CreateButton({
    Name = "Join Discord Support",
    Callback = function()
-       setclipboard("https://discord.gg/votre-lien")
+       setclipboard("https://discord.gg/votre-invite") -- Mets ton lien Discord ici
        Rayfield:Notify({
            Title = "Link Copied",
            Content = "Discord link has been copied to clipboard!",
