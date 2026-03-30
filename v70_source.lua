@@ -11,77 +11,111 @@ local Window = Rayfield:CreateWindow({
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
--- VARIABLES ESP
+-- VARIABLES DE CONTROLE
 local ESP_Enabled = false
+local WalkSpeed_Value = 16
 
 -- FONCTION ESP (BOX + TRACERS)
 local function CreateESP(Player)
     local Box = Drawing.new("Square")
     Box.Visible = false
-    Box.Color = Color3.fromRGB(255, 255, 0)
-    Box.Thickness = 1
+    Box.Color = Color3.fromRGB(255, 0, 0)
+    Box.Thickness = 2
     Box.Filled = false
 
-    RunService.RenderStepped:Connect(function()
-        if ESP_Enabled and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and Player ~= LocalPlayer then
-            local RootPart = Player.Character.HumanoidRootPart
-            local Vector, OnScreen = workspace.CurrentCamera:WorldToViewportPoint(RootPart.Position)
+    local Tracer = Drawing.new("Line")
+    Tracer.Visible = false
+    Tracer.Color = Color3.fromRGB(255, 255, 255)
+    Tracer.Thickness = 1
 
-            if OnScreen then
-                Box.Size = Vector2.new(2000 / Vector.Z, 3500 / Vector.Z)
-                Box.Position = Vector2.new(Vector.X - Box.Size.X / 2, Vector.Y - Box.Size.Y / 2)
-                Box.Visible = true
+    local function Update()
+        local Connection
+        Connection = RunService.RenderStepped:Connect(function()
+            if ESP_Enabled and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and Player ~= LocalPlayer then
+                local RootPart = Player.Character.HumanoidRootPart
+                local Position, OnScreen = Camera:WorldToViewportPoint(RootPart.Position)
+
+                if OnScreen then
+                    -- Taille de la Box selon la distance
+                    local SizeX = 2000 / Position.Z
+                    local SizeY = 3000 / Position.Z
+                    
+                    Box.Size = Vector2.new(SizeX, SizeY)
+                    Box.Position = Vector2.new(Position.X - SizeX / 2, Position.Y - SizeY / 2)
+                    Box.Visible = true
+
+                    -- Ligne vers le joueur
+                    Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                    Tracer.To = Vector2.new(Position.X, Position.Y)
+                    Tracer.Visible = true
+                else
+                    Box.Visible = false
+                    Tracer.Visible = false
+                end
             else
                 Box.Visible = false
+                Tracer.Visible = false
+                if not Player.Parent then Connection:Disconnect() end
             end
-        else
-            Box.Visible = false
-        end
-    end)
+        end)
+    end
+    coroutine.wrap(Update)()
 end
 
--- LANCER L'ESP POUR CHAQUE JOUEUR
-for _, player in pairs(Players:GetPlayers()) do
-    CreateESP(player)
-end
+-- LANCER L'ESP
+for _, p in pairs(Players:GetPlayers()) do CreateESP(p) end
 Players.PlayerAdded:Connect(CreateESP)
 
 -- TABS
 local MainTab = Window:CreateTab("Combat", 4483362458)
 local VisualTab = Window:CreateTab("Visuals", 4483362458)
-local MiscTab = Window:CreateTab("Misc", 4483362458)
 
--- COMBAT FUNCTIONS
-MainTab:CreateSection("Movement & Kill")
-
-MainTab:CreateButton({
-   Name = "Teleport to Random Enemy",
-   Callback = function()
-       local AllPlayers = Players:GetPlayers()
-       local RandomPlayer = AllPlayers[math.random(1, #AllPlayers)]
-       
-       if RandomPlayer ~= LocalPlayer and RandomPlayer.Character and RandomPlayer.Character:FindFirstChild("HumanoidRootPart") then
-           LocalPlayer.Character.HumanoidRootPart.CFrame = RandomPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
-           Rayfield:Notify({Title = "TP Success", Content = "Teleported to " .. RandomPlayer.Name, Duration = 2})
-       end
-   end,
-})
+-- COMBAT
+MainTab:CreateSection("Movement")
 
 MainTab:CreateSlider({
    Name = "WalkSpeed",
    Range = {16, 200},
    Increment = 1,
-   Suffix = "Speed",
    CurrentValue = 16,
-   Callback = function(Value)
-       LocalPlayer.Character.Humanoid.WalkSpeed = Value
+   Callback = function(v)
+       WalkSpeed_Value = v
    end,
 })
 
--- VISUAL FUNCTIONS
+-- Boucle infinie pour la vitesse (plus stable)
+task.spawn(function()
+    while true do
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = WalkSpeed_Value
+        end
+        task.wait(0.1)
+    end
+end)
+
+MainTab:CreateButton({
+   Name = "Teleport behind Random Enemy",
+   Callback = function()
+       local targets = {}
+       for _, p in pairs(Players:GetPlayers()) do
+           if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+               table.insert(targets, p)
+           end
+       end
+       
+       if #targets > 0 then
+           local target = targets[math.random(1, #targets)]
+           LocalPlayer.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 4)
+           Rayfield:Notify({Title = "TP Success", Content = "Behind " .. target.Name, Duration = 2})
+       end
+   end,
+})
+
+-- VISUALS
 VisualTab:CreateToggle({
-   Name = "Enable ESP Boxes",
+   Name = "Enable ESP (Boxes & Lines)",
    CurrentValue = false,
    Flag = "ESP_Toggle",
    Callback = function(Value)
@@ -89,10 +123,4 @@ VisualTab:CreateToggle({
    end,
 })
 
--- MISC
-MiscTab:CreateButton({
-   Name = "Join Discord",
-   Callback = function()
-       setclipboard("https://discord.gg/votre-lien")
-   end,
-})
+Rayfield:Notify({Title = "Banana Hub", Content = "Cheat Source Updated!", Duration = 3})
