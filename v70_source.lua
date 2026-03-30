@@ -1,4 +1,4 @@
--- [[ BANANA RIVALS V72 - SOURCE REPARÉE ]] --
+-- [[ BANANA RIVALS V72 - SILENT EXECUTION (V70 BLACK MENU) ]] --
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -6,7 +6,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 
--- CONFIGS
+-- CONFIGS GLOBALES
 _G.Aimbot = true
 _G.MagicHit = true
 _G.EnableSpeed = true
@@ -25,7 +25,7 @@ Circle.Thickness = 1.5
 Circle.Color = Color3.fromRGB(255, 255, 255)
 Circle.Visible = true
 
--- 2. LOGIQUE PHYSIQUE
+-- 2. LOGIQUE PHYSIQUE (NOCLIP & FLY)
 RunService.Stepped:Connect(function()
     if _G.Noclip and LocalPlayer.Character then
         for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
@@ -38,8 +38,7 @@ local function HandleFly()
     if _G.Fly and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         task.spawn(function()
             local hrp = LocalPlayer.Character.HumanoidRootPart
-            local bv = Instance.new("BodyVelocity")
-            bv.Parent = hrp
+            local bv = Instance.new("BodyVelocity", hrp)
             bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
             bv.Velocity = Vector3.new(0, 0, 0)
             while _G.Fly do
@@ -51,7 +50,7 @@ local function HandleFly()
     end
 end
 
--- 3. LA MACRO T
+-- 3. LA MACRO T (TP + AUTO-SHOT)
 local function DoSilentKill()
     pcall(function()
         local target = nil
@@ -73,7 +72,7 @@ local function DoSilentKill()
     end)
 end
 
--- 4. INTERFACE NOIRE V70
+-- 4. INTERFACE V70 (GUI NOIR)
 local Gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
 local Main = Instance.new("Frame", Gui)
 Main.Size = UDim2.new(0, 220, 0, 560)
@@ -130,10 +129,19 @@ bKill.Size = UDim2.new(0, 200, 0, 45)
 bKill.Position = UDim2.new(0, 10, 0, 380)
 bKill.Text = "TP + AUTO-SHOT (T)"
 bKill.BackgroundColor3 = Color3.fromRGB(200, 150, 0)
+bKill.TextColor3 = Color3.new(0, 0, 0)
 bKill.Font = Enum.Font.SourceSansBold
 bKill.MouseButton1Click:Connect(DoSilentKill)
 
--- 5. RUNTIME
+local bExit = Instance.new("TextButton", Main)
+bExit.Size = UDim2.new(0, 200, 0, 35)
+bExit.Position = UDim2.new(0, 10, 0, 435)
+bExit.Text = "QUITTER"
+bExit.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+bExit.TextColor3 = Color3.new(1, 1, 1)
+bExit.MouseButton1Click:Connect(function() Gui:Destroy() Circle:Remove() end)
+
+-- 5. RUNTIME (AIMBOT & SPEED)
 RunService.RenderStepped:Connect(function()
     Circle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
     Circle.Radius = _G.FOV Circle.Visible = _G.ShowFOV
