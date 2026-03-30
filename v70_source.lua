@@ -1,20 +1,20 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "🍌 BANANA HUB V72 | RIVALS",
-   LoadingTitle = "Banana Hub Loading...",
-   LoadingSubtitle = "V70 Edition Updated",
-   ConfigurationSaving = { Enabled = true, Folder = "BananaHub" }
+   Name = "🍌 BANANA HUB V72 | VERSION FINALE",
+   LoadingTitle = "CHARGEMENT FORCE...",
+   LoadingSubtitle = "Si tu vois ca, c'est la bonne version !",
+   ConfigurationSaving = { Enabled = false }
 })
 
--- SERVICES & VARS
+-- SERVICES
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local Mouse = LocalPlayer:GetMouse()
 
-local ESP_Enabled = false
+-- VARS
 local Aimbot_Enabled = false
 local FOV_Radius = 150
 local FOV_Visible = true
@@ -25,23 +25,21 @@ local FOVCircle = Drawing.new("Circle")
 FOVCircle.Thickness = 1
 FOVCircle.NumSides = 60
 FOVCircle.Radius = FOV_Radius
-FOVCircle.Filled = false
 FOVCircle.Visible = FOV_Visible
-FOVCircle.Color = Color3.fromRGB(255, 255, 255)
+FOVCircle.Color = Color3.fromRGB(255, 255, 0)
 
 -- AIMBOT FUNCTION
-local function GetClosestPlayer()
+local function GetClosest()
     local target = nil
     local dist = math.huge
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
             local pos, onScreen = Camera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
             if onScreen then
-                local mousePos = Vector2.new(Mouse.X, Mouse.Y)
-                local magnitude = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
-                if magnitude < dist and magnitude < FOV_Radius then
+                local mag = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
+                if mag < dist and mag < FOV_Radius then
                     target = p
-                    dist = magnitude
+                    dist = mag
                 end
             end
         end
@@ -49,14 +47,14 @@ local function GetClosestPlayer()
     return target
 end
 
--- MAIN LOOP (SPEED & AIMBOT)
+-- LOOP
 RunService.RenderStepped:Connect(function()
     FOVCircle.Position = Vector2.new(Mouse.X, Mouse.Y + 36)
     FOVCircle.Radius = FOV_Radius
     FOVCircle.Visible = FOV_Visible
 
     if Aimbot_Enabled then
-        local target = GetClosestPlayer()
+        local target = GetClosest()
         if target then
             Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.HumanoidRootPart.Position)
         end
@@ -68,26 +66,26 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- TABS
-local Combat = Window:CreateTab("Combat", 4483362458)
-local Visuals = Window:CreateTab("Visuals", 4483362458)
+local Main = Window:CreateTab("Main", 4483362458)
 
-Combat:CreateToggle({Name = "Enable Aimbot", CurrentValue = false, Callback = function(v) Aimbot_Enabled = v end})
-Combat:CreateSlider({Name = "Aimbot FOV", Range = {50, 800}, Increment = 10, CurrentValue = 150, Callback = function(v) FOV_Radius = v end})
-Combat:CreateSlider({Name = "WalkSpeed", Range = {16, 250}, Increment = 5, CurrentValue = 16, Callback = function(v) WalkSpeed_Value = v end})
-
-Combat:CreateButton({
-    Name = "TP behind Closest Enemy",
-    Callback = function()
-        local target = GetClosestPlayer()
-        if target then LocalPlayer.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,3) end
-    end
+Main:CreateToggle({
+   Name = "Aimbot",
+   CurrentValue = false,
+   Callback = function(v) Aimbot_Enabled = v end,
 })
 
-Visuals:CreateToggle({
-    Name = "Enable Aura ESP",
+Main:CreateSlider({
+   Name = "Speed",
+   Range = {16, 200},
+   Increment = 5,
+   CurrentValue = 16,
+   Callback = function(v) WalkSpeed_Value = v end,
+})
+
+Main:CreateToggle({
+    Name = "ESP Aura",
     CurrentValue = false,
     Callback = function(v)
-        ESP_Enabled = v
         for _, p in pairs(Players:GetPlayers()) do
             if p.Character and p ~= LocalPlayer then
                 local h = p.Character:FindFirstChildOfClass("Highlight") or Instance.new("Highlight", p.Character)
@@ -97,4 +95,13 @@ Visuals:CreateToggle({
         end
     end
 })
-Visuals:CreateToggle({Name = "Show FOV Circle", CurrentValue = true, Callback = function(v) FOV_Visible = v end})
+
+Main:CreateButton({
+    Name = "TP Closest Enemy",
+    Callback = function()
+        local target = GetClosest()
+        if target then LocalPlayer.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame end
+    end
+})
+
+Rayfield:Notify({Title = "V72 LOADED", Content = "Le script est pret !", Duration = 5})
