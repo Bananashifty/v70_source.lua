@@ -1,4 +1,4 @@
--- [[ BANANA RIVALS V72 - V70 FULL EDITION ]] --
+-- [[ BANANA RIVALS V72 - SILENT EXECUTION (TP-ONLY AUTOSHOOT) ]] --
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -6,7 +6,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 
--- CONFIGS COMPLETES
+-- CONFIGS
 _G.Aimbot = true
 _G.MagicHit = true
 _G.EnableSpeed = true
@@ -23,10 +23,9 @@ local HoldingClick = false
 local Circle = Drawing.new("Circle")
 Circle.Thickness = 1.5
 Circle.Color = Color3.fromRGB(255, 255, 255)
-Circle.Visible = _G.ShowFOV
-Circle.Filled = false
+Circle.Visible = true
 
--- 2. LOGIQUE PHYSIQUE (NOCLIP & FLY)
+-- 2. LOGIQUE PHYSIQUE
 RunService.Stepped:Connect(function()
     if _G.Noclip and LocalPlayer.Character then
         for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
@@ -51,7 +50,7 @@ local function HandleFly()
     end
 end
 
--- 3. LA MACRO T (TP + AUTO-SHOT)
+-- 3. LA MACRO T (TP + SEUL MOMENT OÙ ÇA TIRE TOUT SEUL)
 local function DoSilentKill()
     pcall(function()
         local target = nil
@@ -64,8 +63,12 @@ local function DoSilentKill()
         end
         
         if target and LocalPlayer.Character then
-            LocalPlayer.Character:PivotTo(target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2))
+            -- TP pile sur lui
+            LocalPlayer.Character:PivotTo(target.Character.HumanoidRootPart.CFrame)
+            -- Lock tête
             Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position)
+            
+            -- AUTOSHOOT UNIQUE (Uniquement ici !)
             task.wait(0.06) 
             VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
             task.wait(0.02)
@@ -74,7 +77,7 @@ local function DoSilentKill()
     end)
 end
 
--- 4. INTERFACE V70 NOIRE
+-- 4. INTERFACE
 local Gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
 local Main = Instance.new("Frame", Gui)
 Main.Size = UDim2.new(0, 220, 0, 560)
@@ -116,7 +119,6 @@ local function CreateAdjuster(txt, y, globalVar, step)
     Update()
 end
 
--- BOUTONS ET RÉGLAGES
 CreateToggle("AIMBOT (CLIC DROIT)", 40, "Aimbot")
 CreateToggle("MAGIC HIT REG", 75, "MagicHit")
 CreateToggle("AURA ESP", 110, "AuraESP")
@@ -132,14 +134,22 @@ bKill.Size = UDim2.new(0, 200, 0, 45)
 bKill.Position = UDim2.new(0, 10, 0, 380)
 bKill.Text = "TP + AUTO-SHOT (T)"
 bKill.BackgroundColor3 = Color3.fromRGB(200, 150, 0)
+bKill.TextColor3 = Color3.new(0, 0, 0)
 bKill.Font = Enum.Font.SourceSansBold
 bKill.MouseButton1Click:Connect(DoSilentKill)
 
--- 5. RUNTIME (AIMBOT & SPEED)
+local bExit = Instance.new("TextButton", Main)
+bExit.Size = UDim2.new(0, 200, 0, 35)
+bExit.Position = UDim2.new(0, 10, 0, 435)
+bExit.Text = "QUITTER"
+bExit.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+bExit.TextColor3 = Color3.new(1, 1, 1)
+bExit.MouseButton1Click:Connect(function() Gui:Destroy() Circle:Remove() end)
+
+-- 5. RUNTIME (AIMBOT MANUEL)
 RunService.RenderStepped:Connect(function()
     Circle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-    Circle.Radius = _G.FOV 
-    Circle.Visible = _G.ShowFOV
+    Circle.Radius = _G.FOV Circle.Visible = _G.ShowFOV
     
     if _G.EnableSpeed and not _G.Fly and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         local hum = LocalPlayer.Character:FindFirstChild("Humanoid")
@@ -166,7 +176,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 6. ESP AURA
+-- 6. ESP
 task.spawn(function()
     while task.wait(0.5) do
         for _, plr in pairs(Players:GetPlayers()) do
@@ -183,11 +193,14 @@ task.spawn(function()
     end
 end)
 
--- 7. INPUTS (T, F, N)
+-- 7. INPUTS
 UserInputService.InputBegan:Connect(function(i, p)
     if p then return end
     if i.KeyCode == Enum.KeyCode.T then DoSilentKill() end
     if i.KeyCode == Enum.KeyCode.F then _G.Fly = not _G.Fly HandleFly() end
     if i.UserInputType == Enum.UserInputType.MouseButton2 then HoldingClick = true end
 end)
-UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton2 then HoldingClick = false end end)
+
+UserInputService.InputEnded:Connect(function(i) 
+    if i.UserInputType == Enum.UserInputType.MouseButton2 then HoldingClick = false end 
+end)
